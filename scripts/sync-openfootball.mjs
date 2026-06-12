@@ -73,10 +73,14 @@ L.push(rows.map((r) => `(${r.id},${q(r.fase)},${q(r.grupo)},${q(r.home_slot)},${
 writeFileSync(join(ROOT, 'supabase', 'seed.sql'), L.join('\n'))
 console.log('seed.sql regenerado com dados reais.')
 
-// 2) upsert no banco (se configurado)
-const env = Object.fromEntries(readFileSync(join(ROOT, '.env.local'), 'utf8').split('\n')
-  .map((l) => l.trim()).filter((l) => l && !l.startsWith('#') && l.includes('='))
-  .map((l) => { const i = l.indexOf('='); return [l.slice(0, i).trim(), l.slice(i + 1).trim()] }))
+// 2) upsert no banco — env de process.env (CI) ou .env.local (local)
+let env = { ...process.env }
+try {
+  const local = Object.fromEntries(readFileSync(join(ROOT, '.env.local'), 'utf8').split('\n')
+    .map((l) => l.trim()).filter((l) => l && !l.startsWith('#') && l.includes('='))
+    .map((l) => { const i = l.indexOf('='); return [l.slice(0, i).trim(), l.slice(i + 1).trim()] }))
+  env = { ...local, ...env } // process.env tem prioridade (CI)
+} catch { /* sem .env.local (CI) — usa só process.env */ }
 const url = env.NEXT_PUBLIC_SUPABASE_URL, key = env.SUPABASE_SERVICE_ROLE_KEY
 if (!url || url.includes('SEU-PROJECT') || !key) { console.log('Supabase não configurado — só gerei o seed.sql.'); process.exit(0) }
 
