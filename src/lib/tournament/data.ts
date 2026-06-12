@@ -91,3 +91,51 @@ export function buildFixtures(): Fixture[] {
 export const TEAMS = Object.entries(GROUPS).flatMap(([g, codes]) =>
   codes.map((code) => ({ code, nome: NAMES[code], grupo: g })),
 )
+
+// nome em inglês (openfootball) -> código FIFA, p/ o sync
+export const NAME2CODE: Record<string, string> = {
+  Mexico:'MEX','South Africa':'RSA','South Korea':'KOR','Czech Republic':'CZE',
+  Canada:'CAN','Bosnia & Herzegovina':'BIH',Qatar:'QAT',Switzerland:'SUI',
+  Brazil:'BRA',Morocco:'MAR',Haiti:'HAI',Scotland:'SCO',USA:'USA',Paraguay:'PAR',Australia:'AUS',Turkey:'TUR',
+  Germany:'GER','Curaçao':'CUW','Ivory Coast':'CIV',Ecuador:'ECU',Netherlands:'NED',Japan:'JPN',Sweden:'SWE',Tunisia:'TUN',
+  Belgium:'BEL',Egypt:'EGY',Iran:'IRN','New Zealand':'NZL',Spain:'ESP','Cape Verde':'CPV','Saudi Arabia':'KSA',Uruguay:'URU',
+  France:'FRA',Senegal:'SEN',Iraq:'IRQ',Norway:'NOR',Argentina:'ARG',Algeria:'ALG',Austria:'AUT',Jordan:'JOR',
+  Portugal:'POR','DR Congo':'COD',Uzbekistan:'UZB',Colombia:'COL',England:'ENG',Croatia:'CRO',Ghana:'GHA',Panama:'PAN',
+}
+const KO_FASE: Record<string, keyof typeof BRACKET> = {
+  'Round of 32':'r32','Round of 16':'r16','Quarter-final':'qf','Semi-final':'sf','Match for third place':'terceiro','Final':'final',
+}
+
+// constrói as 104 linhas de matches a partir do JSON do openfootball
+export function buildMatchRowsFromOpenfootball(of: { matches: OFMatch[] }) {
+  const groupId: Record<string, number> = {}
+  let n = 1
+  for (const g of Object.keys(GROUPS)) for (const [i, j] of RR) groupId[g + ':' + [GROUPS[g][i], GROUPS[g][j]].sort().join('|')] = n++
+  const koId: Record<string, { id: number; fase: string }> = {}
+  for (const fase of Object.keys(BRACKET)) for (const [id, [a, b]] of Object.entries(BRACKET[fase])) koId[[a, b].sort().join('|')] = { id: +id, fase }
+
+  const norm = (s: string) => (s.includes('/') ? '3' + s.slice(1).replace(/\//g, '') : s)
+  const toUTC = (date: string, time: string) => {
+    const mt = time.match(/(\d{1,2}):(\d{2})\s*UTC([+-]\d{1,2})/)
+    if (!mt) return `${date}T19:00:00.000Z`
+    const off = `${+mt[3] < 0 ? '-' : '+'}${String(Math.abs(+mt[3])).padStart(2, '0')}:00`
+    return new Date(`${date}T${mt[1].padStart(2, '0')}:${mt[2]}:00${off}`).toISOString()
+  }
+  const rows = []
+  for (const m of of.matches) {
+    const ft = m.score?.ft, kickoff = toUTC(m.date, m.time), status = ft ? 'encerrado' : 'agendado'
+    if (m.round.startsWith('Matchday')) {
+      const g = (m.group || '').replace('Group ', '').trim()
+      const h = NAME2CODE[m.team1], a = NAME2CODE[m.team2]
+      const id = g && h && a ? groupId[g + ':' + [h, a].sort().join('|')] : undefined
+      if (!id) continue
+      rows.push({ id, fase: 'grupos', grupo: g, home_slot: h, away_slot: a, home_code: h, away_code: a, kickoff, venue: m.ground || null, home_score: ft ? ft[0] : null, away_score: ft ? ft[1] : null, status })
+    } else if (KO_FASE[m.round]) {
+      const s1 = norm(m.team1), s2 = norm(m.team2), hit = koId[[s1, s2].sort().join('|')]
+      if (!hit) continue
+      rows.push({ id: hit.id, fase: hit.fase, grupo: null, home_slot: s1, away_slot: s2, home_code: null, away_code: null, kickoff, venue: m.ground || null, home_score: ft ? ft[0] : null, away_score: ft ? ft[1] : null, status })
+    }
+  }
+  return rows.sort((a, b) => a.id - b.id)
+}
+type OFMatch = { round: string; date: string; time: string; team1: string; team2: string; group?: string; ground?: string; score?: { ft?: [number, number] } }
