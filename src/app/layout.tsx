@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { TopNav, BottomNav } from '@/components/Nav'
 
 export const metadata: Metadata = {
   title: 'Bolão 26 — Copa do Mundo FIFA 2026',
@@ -17,15 +18,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <img className="mark" src="/assets/logo.svg" alt="FIFA World Cup 26" />
               <div><h1>Bolão 26</h1><small>We Are 26</small></div>
             </a>
-            <nav className="nav">
-              <a href="/" className="on">Torneio</a>
-              <a href="/palpites">Palpites</a>
-              <a href="/ranking">Ranking</a>
-              <a href="/perfil">Perfil</a>
-            </nav>
+            <TopNav />
           </div>
         </header>
         {children}
+        <BottomNav />
       </body>
     </html>
   )

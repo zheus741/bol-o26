@@ -1,4 +1,4 @@
-import { GROUPS, NAMES, BRACKET } from '@/lib/tournament/data'
+import { GROUPS, NAMES, BRACKET, flagUrl } from '@/lib/tournament/data'
 import { standings, solveThirds, resolveSlot, type MatchLite } from '@/lib/tournament/standings'
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server'
 import { LiveCarousel } from '@/components/LiveCarousel'
@@ -60,7 +60,11 @@ export default async function Home() {
                     {sorted.map((r, i) => (
                       <tr key={r.t} className={i < 2 ? 'q1' : i === 2 ? 'q3' : ''}>
                         <td className="pos">{i + 1}</td>
-                        <td className="tm"><b>{r.t}</b><span>{NAMES[r.t]}</span></td>
+                        <td className="tm">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img className="g-flag" src={flagUrl(r.t)!} alt="" />
+                          <b>{r.t}</b><span>{NAMES[r.t]}</span>
+                        </td>
                         <td>{r.J}</td>
                         <td>{r.SG > 0 ? '+' : ''}{r.SG}</td>
                         <td className="pt">{r.Pts}</td>
@@ -102,7 +106,11 @@ function SlotTag({ slot, matches, thirds }: { slot: string; matches: MatchLite[]
   const code = /^[123]/.test(slot) ? resolveSlot(slot, matches, thirds) : null
   return (
     <div className="bteam">
-      {code ? <><b>{code}</b><span className="bnm">{NAMES[code]}</span></> : <i>{slot}</i>}
+      {code ? <>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="b-flag" src={flagUrl(code)!} alt="" />
+        <b>{code}</b><span className="bnm">{NAMES[code]}</span>
+      </> : <i>{slot}</i>}
     </div>
   )
 }
