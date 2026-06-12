@@ -8,7 +8,7 @@ export type LiveMatch = {
   home_code: string | null; away_code: string | null
   home_slot: string; away_slot: string
   home_score: number | null; away_score: number | null
-  status: string; kickoff: string | null
+  status: string; kickoff: string | null; venue?: string | null
 }
 
 /**

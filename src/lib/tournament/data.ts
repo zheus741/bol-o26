@@ -18,6 +18,18 @@ export const NAMES: Record<string, string> = {
   ENG:'Inglaterra',CRO:'Croácia',GHA:'Gana',PAN:'Panamá',
 }
 
+// código FIFA -> slug flagcdn (bandeiras via https://flagcdn.com/<slug>.svg)
+export const FLAG: Record<string, string> = {
+  MEX:'mx',RSA:'za',KOR:'kr',CZE:'cz', CAN:'ca',BIH:'ba',QAT:'qa',SUI:'ch',
+  BRA:'br',MAR:'ma',HAI:'ht',SCO:'gb-sct', USA:'us',PAR:'py',AUS:'au',TUR:'tr',
+  GER:'de',CUW:'cw',CIV:'ci',ECU:'ec', NED:'nl',JPN:'jp',SWE:'se',TUN:'tn',
+  BEL:'be',EGY:'eg',IRN:'ir',NZL:'nz', ESP:'es',CPV:'cv',KSA:'sa',URU:'uy',
+  FRA:'fr',SEN:'sn',IRQ:'iq',NOR:'no', ARG:'ar',ALG:'dz',AUT:'at',JOR:'jo',
+  POR:'pt',COD:'cd',UZB:'uz',COL:'co', ENG:'gb-eng',CRO:'hr',GHA:'gh',PAN:'pa',
+}
+export const flagUrl = (code: string | null | undefined) =>
+  code && FLAG[code] ? `https://flagcdn.com/${FLAG[code]}.svg` : null
+
 export const GROUPS: Record<string, string[]> = {
   A:['MEX','RSA','KOR','CZE'], B:['CAN','BIH','QAT','SUI'],
   C:['BRA','MAR','HAI','SCO'], D:['USA','PAR','AUS','TUR'],

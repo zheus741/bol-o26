@@ -43,7 +43,7 @@ export default async function Perfil() {
           <div className="big-av anton">{ini}</div>
           <div>
             <h3 className="anton">{nome}</h3>
-            <div className="psub">{profile?.apelido ? `@${profile.apelido} · ` : ''}grupo Bolão 26</div>
+            <div className="psub">{user.email}</div>
           </div>
           <div className="pstats">
             <div><div className="v anton">{myRow?.pontos ?? 0}</div><div className="k">Pontos</div></div>

@@ -12,7 +12,7 @@ async function loadMatches(): Promise<LiveMatch[]> {
     const sb = await createClient()
     const { data } = await sb
       .from('matches')
-      .select('id,fase,grupo,home_code,away_code,home_slot,away_slot,home_score,away_score,status,kickoff')
+      .select('*')
       .order('kickoff', { ascending: true })
     return (data as LiveMatch[]) ?? []
   } catch {

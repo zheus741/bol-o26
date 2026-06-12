@@ -1,6 +1,4 @@
--- ============================================================
--- BOLÃO 26 — SETUP COMPLETO (re-rodável; dados reais do openfootball)
--- ============================================================
+-- BOLÃO 26 — SETUP COMPLETO (re-rodável)
 
 -- ============================================================================
 -- BOLÃO DA COPA 2026 — schema inicial
@@ -53,10 +51,12 @@ create table if not exists public.matches (
   home_code   text references public.teams(code),  -- preenchido quando resolvido
   away_code   text references public.teams(code),
   kickoff     timestamptz,                   -- horário em UTC (exibir em BRT no app)
+  venue       text,                          -- cidade/sede do jogo
   home_score  int,
   away_score  int,
   status      text not null default 'agendado' -- agendado|ao_vivo|encerrado
 );
+alter table public.matches add column if not exists venue text;
 create index if not exists matches_kickoff_idx on public.matches(kickoff);
 create index if not exists matches_fase_idx    on public.matches(fase);
 

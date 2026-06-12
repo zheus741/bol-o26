@@ -46,14 +46,14 @@ for (const m of data.matches) {
     const id = groupIdx[g + ':' + pairKey(h, a)]
     if (!id) { console.warn('id grupo não achado:', g, h, a); continue }
     rows.push({ id, fase: 'grupos', grupo: g, home_slot: h, away_slot: a, home_code: h, away_code: a,
-      kickoff, home_score: ft ? ft[0] : null, away_score: ft ? ft[1] : null, status: ft ? 'encerrado' : 'agendado' })
+      kickoff, venue: m.ground || null, home_score: ft ? ft[0] : null, away_score: ft ? ft[1] : null, status: ft ? 'encerrado' : 'agendado' })
     if (ft) jogados++
   } else {
     const s1 = norm(m.team1), s2 = norm(m.team2)
     const hit = koIdx[pairKey(s1, s2)]
     if (!hit) { console.warn('KO não mapeado:', m.team1, m.team2); continue }
     rows.push({ id: hit.id, fase: hit.fase, grupo: null, home_slot: s1, away_slot: s2, home_code: null, away_code: null,
-      kickoff, home_score: ft ? ft[0] : null, away_score: ft ? ft[1] : null, status: ft ? 'encerrado' : 'agendado' })
+      kickoff, venue: m.ground || null, home_score: ft ? ft[0] : null, away_score: ft ? ft[1] : null, status: ft ? 'encerrado' : 'agendado' })
     if (ft) jogados++
   }
 }
@@ -88,6 +88,11 @@ const sb = createClient(url, key, { auth: { persistSession: false } })
 const teams = Object.entries(GROUPS).flatMap(([g, cs]) => cs.map((c) => ({ code: c, nome: NAMES[c], grupo: g })))
 const t = await sb.from('teams').upsert(teams, { onConflict: 'code' })
 if (t.error) { console.error('ERRO upsert teams:', t.error.message); console.error('-> rode supabase/setup_completo.sql primeiro.'); process.exit(1) }
-const mm = await sb.from('matches').upsert(rows, { onConflict: 'id' })
+let mm = await sb.from('matches').upsert(rows, { onConflict: 'id' })
+if (mm.error && /venue/i.test(mm.error.message)) {
+  console.warn('coluna venue ausente — sincronizando sem venue (rode o ALTER p/ ativar local do jogo).')
+  const semVenue = rows.map(({ venue, ...r }) => r) // eslint-disable-line no-unused-vars
+  mm = await sb.from('matches').upsert(semVenue, { onConflict: 'id' })
+}
 if (mm.error) { console.error('ERRO upsert matches:', mm.error.message); process.exit(1) }
 console.log(`✅ banco sincronizado: ${teams.length} times, ${rows.length} jogos.`)

@@ -40,7 +40,7 @@ export default async function Ranking() {
                 <div className="lrow" key={r.user_id}>
                   <div className="pos anton">{i + 4}</div>
                   <div className="who"><span className="av anton">{ini(r)}</span>
-                    <div>{r.apelido || r.nome}<small>{r.cravadas} cravadas</small></div>
+                    <span className="who-nm">{r.apelido || r.nome}</span>
                   </div>
                   <div className="tot anton">{r.pontos}</div>
                 </div>
