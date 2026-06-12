@@ -1,0 +1,108 @@
+import { GROUPS, NAMES, BRACKET } from '@/lib/tournament/data'
+import { standings, solveThirds, resolveSlot, type MatchLite } from '@/lib/tournament/standings'
+import { createClient, isSupabaseConfigured } from '@/lib/supabase/server'
+import { LiveCarousel } from '@/components/LiveCarousel'
+import type { LiveMatch } from '@/lib/supabase/use-live-matches'
+
+export const dynamic = 'force-dynamic'
+
+async function loadMatches(): Promise<LiveMatch[]> {
+  if (!isSupabaseConfigured()) return []
+  try {
+    const sb = await createClient()
+    const { data } = await sb
+      .from('matches')
+      .select('id,fase,grupo,home_code,away_code,home_slot,away_slot,home_score,away_score,status,kickoff')
+      .order('kickoff', { ascending: true })
+    return (data as LiveMatch[]) ?? []
+  } catch {
+    return []
+  }
+}
+
+const FASES: [string, keyof typeof BRACKET][] = [
+  ['32-avos', 'r32'], ['16-avos', 'r16'], ['Quartas', 'qf'], ['Semis', 'sf'], ['3º lugar', 'terceiro'], ['Final', 'final'],
+]
+
+export default async function Home() {
+  const matches = await loadMatches()
+  const configured = isSupabaseConfigured()
+  const thirds = solveThirds(matches)
+
+  return (
+    <>
+      {!configured && (
+        <div className="setup">
+          <div className="wrap">
+            ⚙️ Modo demo — configure o Supabase em <code>.env.local</code> e rode <code>supabase/setup_completo.sql</code> no SQL Editor.
+          </div>
+        </div>
+      )}
+
+      <LiveCarousel initial={matches} />
+
+      <main className="wrap">
+        <h2 className="day">Classificação</h2>
+        <div className="groups-grid">
+          {Object.keys(GROUPS).map((g) => {
+            const { sorted, done } = standings(g, matches)
+            return (
+              <div className="gcard" key={g}>
+                <div className="ghead">
+                  <span className="gl">{g}</span> Grupo {g}
+                  <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 800, color: done ? '#8a88ad' : 'var(--blue)' }}>
+                    {done ? 'ENCERRADO' : 'EM ANDAMENTO'}
+                  </span>
+                </div>
+                <table className="gtable">
+                  <thead><tr><th></th><th>Time</th><th>J</th><th>SG</th><th>Pts</th></tr></thead>
+                  <tbody>
+                    {sorted.map((r, i) => (
+                      <tr key={r.t} className={i < 2 ? 'q1' : i === 2 ? 'q3' : ''}>
+                        <td className="pos">{i + 1}</td>
+                        <td className="tm"><b>{r.t}</b><span>{NAMES[r.t]}</span></td>
+                        <td>{r.J}</td>
+                        <td>{r.SG > 0 ? '+' : ''}{r.SG}</td>
+                        <td className="pt">{r.Pts}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
+          })}
+        </div>
+
+        <h2 className="day" style={{ marginTop: 34 }}>Chaveamento</h2>
+        <div className="bracket-scroll">
+          <div className="bracket">
+            {FASES.map(([label, key]) => (
+              <div className="bcol" key={key}>
+                <div className="bcol-h">{label}</div>
+                {Object.entries(BRACKET[key]).map(([num, [h, a]]) => (
+                  <div className="btie" key={num}>
+                    <div className="bn">#{num}</div>
+                    <SlotTag slot={h} matches={matches} thirds={thirds} />
+                    <SlotTag slot={a} matches={matches} thirds={thirds} />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+        <p style={{ color: '#9a98ba', fontSize: 12, fontWeight: 600, margin: '28px 0 40px' }}>
+          Placar exato = 3 pts · só o vencedor/empate = 1 pt · palpite trava no apito (horários em BRT).
+        </p>
+      </main>
+    </>
+  )
+}
+
+function SlotTag({ slot, matches, thirds }: { slot: string; matches: MatchLite[]; thirds: Record<string, string> }) {
+  const code = /^[123]/.test(slot) ? resolveSlot(slot, matches, thirds) : null
+  return (
+    <div className="bteam">
+      {code ? <><b>{code}</b><span className="bnm">{NAMES[code]}</span></> : <i>{slot}</i>}
+    </div>
+  )
+}
