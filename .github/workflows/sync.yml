@@ -1,7 +1,7 @@
 name: Sync placar (openfootball)
 
 # Atualiza jogos/placares reais no Supabase a cada 10 min (Copa ao vivo).
-# Requer secrets no repo: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+# Requer SÓ 1 secret no repo: SUPABASE_SERVICE_ROLE_KEY (a URL é pública, embutida abaixo).
 on:
   schedule:
     - cron: '*/10 * * * *'
@@ -22,6 +22,6 @@ jobs:
       - run: npm install --no-audit --no-fund @supabase/supabase-js
       - name: Sincronizar
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: https://ajygmjgbljdkogvijecl.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/sync-openfootball.mjs
