@@ -22,7 +22,7 @@ export function Bracket({ matches }: { matches: BracketMatch[] }) {
       <div className="bk-slot">
         {f
           // eslint-disable-next-line @next/next/no-img-element
-          ? <img className="bk-flag" src={f} alt="" />
+          ? <img className="bk-flag" src={f} alt="" loading="lazy" decoding="async" />
           : <span className="bk-flag ph" />}
         {code ? <b>{code}</b> : <i>{slot}</i>}
       </div>

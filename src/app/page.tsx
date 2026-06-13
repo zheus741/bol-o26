@@ -36,6 +36,10 @@ export default async function Home() {
 
       <main className="wrap">
         <h2 className="day">Classificação</h2>
+        <div className="zone-legend">
+          <span className="zl"><span className="dot q1" /> 1º e 2º avançam</span>
+          <span className="zl"><span className="dot q3" /> 3º disputa repescagem (8 melhores)</span>
+        </div>
         <div className="groups-grid">
           {Object.keys(GROUPS).map((g) => {
             const { sorted, done } = standings(g, matches)
@@ -55,7 +59,7 @@ export default async function Home() {
                         <td className="pos">{i + 1}</td>
                         <td className="tm">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img className="g-flag" src={flagUrl(r.t)!} alt="" />
+                          <img className="g-flag" src={flagUrl(r.t)!} alt="" loading="lazy" decoding="async" />
                           <b>{r.t}</b><span>{NAMES[r.t]}</span>
                         </td>
                         <td>{r.J}</td>

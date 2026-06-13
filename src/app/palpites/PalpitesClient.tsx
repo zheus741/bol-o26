@@ -20,6 +20,7 @@ export function PalpitesClient({ matches, palpites, userId }: { matches: MatchRo
   const [state, setState] = useState<PalpiteMap>(palpites)
   const [saving, setSaving] = useState<number | null>(null)
   const [saved, setSaved] = useState<Set<number>>(new Set(Object.keys(palpites).map(Number)))
+  const [toast, setToast] = useState(false)
   const now = Date.now()
 
   function setScore(id: number, sideIdx: 0 | 1, v: string) {
@@ -33,7 +34,8 @@ export function PalpitesClient({ matches, palpites, userId }: { matches: MatchRo
     const sb = createClient()
     const { error } = await sb.from('predictions').upsert({ user_id: userId, match_id: id, palpite_home: h, palpite_away: a }, { onConflict: 'user_id,match_id' })
     setSaving(null)
-    if (!error) setSaved((s) => new Set(s).add(id)); else alert(error.message)
+    if (!error) { setSaved((s) => new Set(s).add(id)); setToast(true); setTimeout(() => setToast(false), 2600) }
+    else alert(error.message)
   }
 
   if (!matches.length) return <p style={{ color: '#6b6991', fontWeight: 600 }}>Nenhum jogo disponível ainda.</p>
@@ -62,16 +64,16 @@ export function PalpitesClient({ matches, palpites, userId }: { matches: MatchRo
                   <div className="pal-pair">
                     <div className="pal-team home">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img className="pal-flag" src={flagUrl(m.home_code)!} alt="" />
+                      <img className="pal-flag" src={flagUrl(m.home_code)!} alt="" loading="lazy" decoding="async" />
                       <span className="pal-nm">{NAMES[m.home_code]}</span>
                     </div>
-                    <input className="pal-sc" inputMode="numeric" disabled={locked} value={boxH ?? ''} placeholder="–" onChange={(e) => setScore(m.id, 0, e.target.value)} />
-                    <span className="pal-x">×</span>
-                    <input className="pal-sc" inputMode="numeric" disabled={locked} value={boxA ?? ''} placeholder="–" onChange={(e) => setScore(m.id, 1, e.target.value)} />
+                    <input className="pal-sc" inputMode="numeric" disabled={locked} value={boxH ?? ''} placeholder="–" aria-label={`Placar ${NAMES[m.home_code]}`} onChange={(e) => setScore(m.id, 0, e.target.value)} />
+                    <span className="pal-x" aria-hidden>×</span>
+                    <input className="pal-sc" inputMode="numeric" disabled={locked} value={boxA ?? ''} placeholder="–" aria-label={`Placar ${NAMES[m.away_code]}`} onChange={(e) => setScore(m.id, 1, e.target.value)} />
                     <div className="pal-team away">
                       <span className="pal-nm">{NAMES[m.away_code]}</span>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img className="pal-flag" src={flagUrl(m.away_code)!} alt="" />
+                      <img className="pal-flag" src={flagUrl(m.away_code)!} alt="" loading="lazy" decoding="async" />
                     </div>
                   </div>
 
@@ -84,7 +86,7 @@ export function PalpitesClient({ matches, palpites, userId }: { matches: MatchRo
                     ) : locked ? (
                       <span className="pal-lock">{pal ? `seu: ${pal[0]}×${pal[1]}` : 'sem palpite'}</span>
                     ) : saved.has(m.id) ? (
-                      <button className="btn-mini" onClick={() => save(m.id)} disabled={saving === m.id}>{saving === m.id ? <span className="btn-spin dark" /> : '✓ salvo · editar'}</button>
+                      <button className="btn-mini" onClick={() => save(m.id)} disabled={saving === m.id}>{saving === m.id ? <span className="btn-spin dark" /> : <><Check />salvo · editar</>}</button>
                     ) : (
                       <button className="btn-primary mini" onClick={() => save(m.id)} disabled={saving === m.id}>{saving === m.id ? <span className="btn-spin" /> : 'Salvar'}</button>
                     )}
@@ -95,6 +97,13 @@ export function PalpitesClient({ matches, palpites, userId }: { matches: MatchRo
           </div>
         </div>
       ))}
+      <div className={`toast ${toast ? 'show' : ''}`} role="status" aria-live="polite">
+        <Check />Palpite salvo
+      </div>
     </div>
   )
+}
+
+function Check() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M20 6L9 17l-5-5" /></svg>
 }

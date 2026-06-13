@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { TopNav, BottomNav } from '@/components/Nav'
+import { AccountChip } from '@/components/AccountChip'
 
 export const metadata: Metadata = {
   title: 'Bolão 26 — Copa do Mundo FIFA 2026',
@@ -18,7 +19,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <img className="mark" src="/assets/logo.svg" alt="FIFA World Cup 26" />
               <div><h1>Bolão 26</h1><small>We Are 26</small></div>
             </a>
-            <TopNav />
+            <div className="header-right">
+              <TopNav />
+              <AccountChip />
+            </div>
           </div>
         </header>
         {children}

@@ -10,6 +10,7 @@ export function LoginForm({ configured, next }: { configured: boolean; next: str
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [showPw, setShowPw] = useState(false)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ t: 'err' | 'ok'; m: string } | null>(null)
 
@@ -68,8 +69,13 @@ export function LoginForm({ configured, next }: { configured: boolean; next: str
         <input className="login-input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
           placeholder="voce@email.com" inputMode="email" autoComplete="email" disabled={busy} />
         <label className="login-label">Senha</label>
-        <input className="login-input" type="password" required minLength={6} value={senha} onChange={(e) => setSenha(e.target.value)}
-          placeholder="••••••" autoComplete={mode === 'criar' ? 'new-password' : 'current-password'} disabled={busy} />
+        <div className="pw-wrap">
+          <input className="login-input" type={showPw ? 'text' : 'password'} required minLength={6} value={senha} onChange={(e) => setSenha(e.target.value)}
+            placeholder="••••••" autoComplete={mode === 'criar' ? 'new-password' : 'current-password'} disabled={busy} />
+          <button type="button" className="pw-toggle" onClick={() => setShowPw((v) => !v)} aria-label={showPw ? 'Ocultar senha' : 'Mostrar senha'}>
+            {showPw ? 'ocultar' : 'mostrar'}
+          </button>
+        </div>
         <button className="btn-primary" type="submit" disabled={busy}>
           {busy ? <span className="btn-spin" /> : mode === 'criar' ? 'Criar conta' : 'Entrar'}
         </button>

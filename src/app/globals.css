@@ -3,9 +3,9 @@
 /* ============================================================================
    BOLÃO 26 · Design System — marca FIFA World Cup 26
    ============================================================================ */
-@font-face{font-family:'FWC2026X';src:url('/fonts/FWC2026-ExpandedBlack.ttf') format('truetype');font-weight:900;font-display:swap}
-@font-face{font-family:'FWC2026N';src:url('/fonts/FWC2026-Normal.ttf') format('truetype');font-weight:400;font-display:swap}
-@font-face{font-family:'FWC2026C';src:url('/fonts/FWC2026-UltraCondensed.ttf') format('truetype');font-weight:500;font-display:swap}
+@font-face{font-family:'FWC2026X';src:url('/fonts/FWC2026-ExpandedBlack.woff2') format('woff2'),url('/fonts/FWC2026-ExpandedBlack.ttf') format('truetype');font-weight:900;font-display:swap}
+@font-face{font-family:'FWC2026N';src:url('/fonts/FWC2026-Normal.woff2') format('woff2'),url('/fonts/FWC2026-Normal.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:'FWC2026C';src:url('/fonts/FWC2026-UltraCondensed.woff2') format('woff2'),url('/fonts/FWC2026-UltraCondensed.ttf') format('truetype');font-weight:500;font-display:swap}
 
 :root{
   --blue:#304fff; --blue-deep:#2138d6; --navy:#101650; --ink:#101650;
@@ -22,6 +22,10 @@ body{font-family:'FWC2026C','Arial Narrow','Noto Sans',sans-serif;background:var
 b,strong{font-weight:700}
 .tnum{font-variant-numeric:tabular-nums}
 .wrap{max-width:1120px;margin:0 auto;padding:0 18px}
+/* a11y: foco de teclado visível */
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:8px}
+/* legibilidade: texto corrido/labels em sans (condensada só no chrome) */
+main p,.login-label,.login-input,.login-msg,.setup,.lrow .who-cr,.psub{font-family:system-ui,'Helvetica Neue',Arial,sans-serif}
 
 /* header */
 .app-h{position:sticky;top:0;z-index:40;background:var(--navy);color:#fff}
@@ -30,7 +34,8 @@ b,strong{font-weight:700}
 .brand .mark{height:44px;width:auto;filter:brightness(0) invert(1)}
 .brand h1{font-family:'FWC2026X','Arial Narrow',sans-serif;font-size:23px;letter-spacing:.01em;text-transform:uppercase;line-height:.9;margin:0}
 .brand small{display:block;font-family:'Noto Sans';font-weight:700;font-size:9.5px;letter-spacing:.34em;color:var(--lime);text-transform:uppercase}
-.nav{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.header-right{display:flex;align-items:center;gap:16px;margin-left:auto}
+.nav{display:flex;gap:6px;flex-wrap:wrap}
 .nav a{font-family:'FWC2026C','Arial Narrow',sans-serif;font-size:17px;letter-spacing:.04em;text-transform:uppercase;color:#c9cdf5;padding:7px 13px;border-radius:999px;text-decoration:none}
 .nav a:hover{color:#fff;background:rgba(255,255,255,.08)}
 .nav a.on{background:#fff;color:var(--navy)}
@@ -126,13 +131,13 @@ b,strong{font-weight:700}
 .pal-flag{width:30px;height:21px;border-radius:4px;object-fit:cover;box-shadow:0 1px 2px rgba(16,22,80,.22);flex:none}
 .pal-nm{font-size:19px;font-weight:600;text-transform:uppercase;letter-spacing:.01em;line-height:1;white-space:nowrap}
 .pal-x{font-family:'FWC2026X','Arial Narrow',sans-serif;color:#9a98ba;flex:none}
-.pal-sc{width:48px;height:48px;border-radius:12px;border:2px solid var(--ink);background:#fff;font-family:'FWC2026X','Arial Narrow',sans-serif;font-size:26px;text-align:center;color:var(--ink);flex:none}
+.pal-sc{width:48px;height:48px;border-radius:12px;border:2px solid var(--ink);background:#fff;font-family:Arial,system-ui,sans-serif;font-weight:800;font-variant-numeric:tabular-nums;font-size:24px;text-align:center;color:var(--ink);flex:none}
 .pal-sc:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px rgba(48,79,255,.15)}
 .pal-sc:disabled{border-color:var(--line);color:#9a98c0;background:var(--paper)}
 .pal-act{display:flex;justify-content:flex-end;align-items:center;gap:8px}
 .pal-mine{font-family:'FWC2026X','Arial Narrow',sans-serif;font-size:18px;color:#6b6991}
 .btn-primary.mini{width:auto;padding:11px 20px;font-size:17px}
-.btn-mini{font-weight:700;font-size:14px;color:var(--green);background:none;border:none;cursor:pointer;text-transform:uppercase;letter-spacing:.02em}
+.btn-mini{font-weight:700;font-size:14px;color:var(--green);background:none;border:none;cursor:pointer;text-transform:uppercase;letter-spacing:.02em;min-height:44px;display:inline-flex;align-items:center;gap:5px;padding:0 6px}
 .pal-lock{font-size:13px;font-weight:600;color:#9a98ba;text-transform:uppercase;letter-spacing:.02em;text-align:right}
 .btn-spin.dark{border-color:rgba(0,0,0,.2);border-top-color:var(--green)}
 .pchip{font-family:'FWC2026X','Arial Narrow',sans-serif;font-size:16px;padding:6px 11px;border-radius:9px}
@@ -265,3 +270,45 @@ b,strong{font-weight:700}
   body{padding-bottom:76px}
   .live-head h2{font-size:24px}
 }
+
+/* === UX pass 5 === */
+/* #10 dica de scroll no carrossel (desktop) */
+@media(min-width:781px){.rail{-webkit-mask-image:linear-gradient(90deg,#000 93%,transparent);mask-image:linear-gradient(90deg,#000 93%,transparent)}}
+/* #9 chaveamento empilha vertical no mobile (sem scroll horizontal gigante) */
+@media(max-width:780px){
+  .bk-scroll{padding:4px 14px 14px}
+  .bk2{flex-direction:column;width:100%;min-width:0;gap:8px;align-items:stretch}
+  .bk-side{flex-direction:column;gap:8px}
+  .bk-round{min-width:0}
+  .bk-h{text-align:left;margin-top:6px}
+  .bk-center{min-width:0}
+  .bk-center .bk-h{text-align:left}
+}
+/* #8 legenda das zonas de classificação */
+.zone-legend{display:flex;gap:14px;flex-wrap:wrap;margin:0 2px 14px;font-size:13px;font-weight:600;color:#6b6991;font-family:system-ui,Arial,sans-serif}
+.zone-legend .zl{display:inline-flex;align-items:center;gap:6px}
+.zone-legend .dot{width:12px;height:12px;border-radius:3px;flex:none}
+.zone-legend .dot.q1{background:var(--green)} .zone-legend .dot.q3{background:var(--yellow)}
+/* toast */
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-weight:700;font-size:14px;padding:12px 20px;border-radius:12px;box-shadow:var(--shadow);display:flex;align-items:center;gap:8px;opacity:0;pointer-events:none;transition:.25s;z-index:200;font-family:system-ui,Arial,sans-serif}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast svg{width:18px;height:18px;color:var(--lime)}
+/* account chip no header */
+.acct{display:flex;align-items:center;gap:9px}
+.acct .who{display:flex;align-items:center;gap:8px;color:#fff;text-decoration:none;font-weight:700;font-size:14px;font-family:system-ui,Arial,sans-serif}
+.acct .av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:14px;color:#fff;background:linear-gradient(135deg,var(--magenta),var(--violet));font-family:'FWC2026N',Arial,sans-serif}
+.acct .out{background:rgba(255,255,255,.12);border:none;color:#c9cdf5;cursor:pointer;border-radius:9px;padding:7px 12px;font-weight:700;font-size:13px;font-family:system-ui,Arial,sans-serif}
+.acct .out:hover{background:rgba(255,255,255,.2);color:#fff}
+.acct .enter{background:var(--lime);color:var(--navy);text-decoration:none;border-radius:999px;padding:8px 16px;font-weight:800;font-size:13px;font-family:system-ui,Arial,sans-serif}
+@media(max-width:780px){.acct .who span.nm{display:none}.acct .out{padding:7px 10px}}
+/* carrossel: status do palpite do usuário */
+.mc-you{margin-top:10px;padding-top:9px;border-top:1px dashed var(--line);display:flex;align-items:center;justify-content:space-between;font-size:12.5px;font-weight:600;color:#6b6991;font-family:system-ui,Arial,sans-serif}
+.mc-you .pend{color:var(--red);font-weight:800;text-transform:uppercase;letter-spacing:.03em;text-decoration:none}
+.mc-you b{color:var(--ink)}
+/* countdown */
+.live-next{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--lime);font-family:system-ui,Arial,sans-serif}
+.mc-venue-mini{font-size:11px;color:#9a98ba;font-weight:600;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.pw-wrap{position:relative}
+.pw-wrap .login-input{margin-bottom:0;padding-right:74px}
+.pw-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--blue);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;font-family:system-ui,Arial,sans-serif;padding:6px}
+.login-card form .pw-wrap{margin-bottom:12px}
