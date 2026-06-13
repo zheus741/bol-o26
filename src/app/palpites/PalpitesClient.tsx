@@ -12,8 +12,7 @@ export type MatchRow = {
 }
 export type PalpiteMap = Record<number, [number, number]>
 
-const FASE: Record<string, string> = { grupos: 'Grupos', r32: '32-avos', r16: '16-avos', qf: 'Quartas', sf: 'Semis', terceiro: '3º lugar', final: 'Final' }
-const brtDay = (iso: string | null) => iso ? new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: 'short' }).format(new Date(iso)) : ''
+const brtDay = (iso: string | null) => iso ? new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'short', day: '2-digit', month: 'short' }).format(new Date(iso)).replace('.', '').toUpperCase() : '—'
 const brtTime = (iso: string | null) => iso ? new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' }).format(new Date(iso)) : ''
 const pontos = (ph: number, pa: number, rh: number, ra: number) => (ph === rh && pa === ra ? 3 : Math.sign(ph - pa) === Math.sign(rh - ra) ? 1 : 0)
 
@@ -39,13 +38,8 @@ export function PalpitesClient({ matches, palpites, userId }: { matches: MatchRo
 
   if (!matches.length) return <p style={{ color: '#6b6991', fontWeight: 600 }}>Nenhum jogo disponível ainda.</p>
 
-  // agrupa por dia (BRT)
   const byDay = new Map<string, MatchRow[]>()
-  for (const m of matches) {
-    const k = m.kickoff ? brtDay(m.kickoff) : '—'
-    if (!byDay.has(k)) byDay.set(k, [])
-    byDay.get(k)!.push(m)
-  }
+  for (const m of matches) { const k = brtDay(m.kickoff); if (!byDay.has(k)) byDay.set(k, []); byDay.get(k)!.push(m) }
 
   return (
     <div className="pal-wrap">
@@ -58,22 +52,23 @@ export function PalpitesClient({ matches, palpites, userId }: { matches: MatchRo
               const done = m.status === 'encerrado' && m.home_score != null
               const pal = state[m.id]
               const pt = done && pal ? pontos(pal[0], pal[1], m.home_score!, m.away_score!) : null
+              // caixas mostram: resultado real (se encerrado) ou o palpite
+              const boxH = done ? m.home_score : pal?.[0]
+              const boxA = done ? m.away_score : pal?.[1]
               return (
                 <div className={`pal-row${locked ? ' locked' : ''}${done ? ' done' : ''}`} key={m.id}>
-                  <div className="pal-when">
-                    <span className="pal-tm">{locked ? (done ? 'FIM' : 'AO VIVO') : brtTime(m.kickoff)}</span>
-                  </div>
+                  <div className="pal-status">{done ? 'FIM' : locked ? 'AO VIVO' : brtTime(m.kickoff)}</div>
 
                   <div className="pal-pair">
-                    <div className="pal-side home">
+                    <div className="pal-team home">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img className="pal-flag" src={flagUrl(m.home_code)!} alt="" />
                       <span className="pal-nm">{NAMES[m.home_code]}</span>
-                      <input className="pal-sc" inputMode="numeric" disabled={locked} value={pal?.[0] ?? ''} placeholder="–" onChange={(e) => setScore(m.id, 0, e.target.value)} />
                     </div>
+                    <input className="pal-sc" inputMode="numeric" disabled={locked} value={boxH ?? ''} placeholder="–" onChange={(e) => setScore(m.id, 0, e.target.value)} />
                     <span className="pal-x">×</span>
-                    <div className="pal-side away">
-                      <input className="pal-sc" inputMode="numeric" disabled={locked} value={pal?.[1] ?? ''} placeholder="–" onChange={(e) => setScore(m.id, 1, e.target.value)} />
+                    <input className="pal-sc" inputMode="numeric" disabled={locked} value={boxA ?? ''} placeholder="–" onChange={(e) => setScore(m.id, 1, e.target.value)} />
+                    <div className="pal-team away">
                       <span className="pal-nm">{NAMES[m.away_code]}</span>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img className="pal-flag" src={flagUrl(m.away_code)!} alt="" />
@@ -82,12 +77,12 @@ export function PalpitesClient({ matches, palpites, userId }: { matches: MatchRo
 
                   <div className="pal-act">
                     {done ? (
-                      <div className="pal-result">
-                        <span className="pal-real">{m.home_score}×{m.away_score}</span>
+                      <>
+                        <span className="pal-mine">{pal ? `${pal[0]}×${pal[1]}` : '—'}</span>
                         <span className={`pchip p${pt}`}>+{pt}</span>
-                      </div>
+                      </>
                     ) : locked ? (
-                      <span className="pal-lock">aguardando resultado</span>
+                      <span className="pal-lock">{pal ? `seu: ${pal[0]}×${pal[1]}` : 'sem palpite'}</span>
                     ) : saved.has(m.id) ? (
                       <button className="btn-mini" onClick={() => save(m.id)} disabled={saving === m.id}>{saving === m.id ? <span className="btn-spin dark" /> : '✓ salvo · editar'}</button>
                     ) : (

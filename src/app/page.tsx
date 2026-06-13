@@ -1,7 +1,8 @@
-import { GROUPS, NAMES, BRACKET, flagUrl } from '@/lib/tournament/data'
-import { standings, solveThirds, resolveSlot, type MatchLite } from '@/lib/tournament/standings'
+import { GROUPS, NAMES, flagUrl } from '@/lib/tournament/data'
+import { standings } from '@/lib/tournament/standings'
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server'
 import { LiveCarousel } from '@/components/LiveCarousel'
+import { Bracket } from '@/components/Bracket'
 import type { LiveMatch } from '@/lib/supabase/use-live-matches'
 
 export const dynamic = 'force-dynamic'
@@ -10,24 +11,16 @@ async function loadMatches(): Promise<LiveMatch[]> {
   if (!isSupabaseConfigured()) return []
   try {
     const sb = await createClient()
-    const { data } = await sb
-      .from('matches')
-      .select('*')
-      .order('kickoff', { ascending: true })
+    const { data } = await sb.from('matches').select('*').order('kickoff', { ascending: true })
     return (data as LiveMatch[]) ?? []
   } catch {
     return []
   }
 }
 
-const FASES: [string, keyof typeof BRACKET][] = [
-  ['32-avos', 'r32'], ['16-avos', 'r16'], ['Quartas', 'qf'], ['Semis', 'sf'], ['3º lugar', 'terceiro'], ['Final', 'final'],
-]
-
 export default async function Home() {
   const matches = await loadMatches()
   const configured = isSupabaseConfigured()
-  const thirds = solveThirds(matches)
 
   return (
     <>
@@ -78,39 +71,15 @@ export default async function Home() {
         </div>
 
         <h2 className="day" style={{ marginTop: 34 }}>Chaveamento</h2>
-        <div className="bracket-scroll">
-          <div className="bracket">
-            {FASES.map(([label, key]) => (
-              <div className="bcol" key={key}>
-                <div className="bcol-h">{label}</div>
-                {Object.entries(BRACKET[key]).map(([num, [h, a]]) => (
-                  <div className="btie" key={num}>
-                    <div className="bn">#{num}</div>
-                    <SlotTag slot={h} matches={matches} thirds={thirds} />
-                    <SlotTag slot={a} matches={matches} thirds={thirds} />
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-        <p style={{ color: '#9a98ba', fontSize: 12, fontWeight: 600, margin: '28px 0 40px' }}>
+      </main>
+
+      <Bracket matches={matches} />
+
+      <main className="wrap">
+        <p style={{ color: '#9a98ba', fontSize: 12, fontWeight: 600, margin: '20px 0 40px' }}>
           Placar exato = 3 pts · só o vencedor/empate = 1 pt · palpite trava no apito (horários em BRT).
         </p>
       </main>
     </>
-  )
-}
-
-function SlotTag({ slot, matches, thirds }: { slot: string; matches: MatchLite[]; thirds: Record<string, string> }) {
-  const code = /^[123]/.test(slot) ? resolveSlot(slot, matches, thirds) : null
-  return (
-    <div className="bteam">
-      {code ? <>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="b-flag" src={flagUrl(code)!} alt="" />
-        <b>{code}</b><span className="bnm">{NAMES[code]}</span>
-      </> : <i>{slot}</i>}
-    </div>
   )
 }
