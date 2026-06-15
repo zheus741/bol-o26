@@ -82,7 +82,12 @@ try {
   env = { ...local, ...env } // process.env tem prioridade (CI)
 } catch { /* sem .env.local (CI) — usa só process.env */ }
 const url = env.NEXT_PUBLIC_SUPABASE_URL, key = env.SUPABASE_SERVICE_ROLE_KEY
-if (!url || url.includes('SEU-PROJECT') || !key) { console.log('Supabase não configurado — só gerei o seed.sql.'); process.exit(0) }
+if (!url || url.includes('SEU-PROJECT') || !key) {
+  // em CI: falha VISÍVEL (run vermelho) p/ não mascarar secret faltando; local: só gera seed
+  const ci = process.env.CI || process.env.GITHUB_ACTIONS
+  console.error('Supabase não configurado (falta NEXT_PUBLIC_SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY).')
+  process.exit(ci ? 1 : 0)
+}
 
 const sb = createClient(url, key, { auth: { persistSession: false } })
 const teams = Object.entries(GROUPS).flatMap(([g, cs]) => cs.map((c) => ({ code: c, nome: NAMES[c], grupo: g })))

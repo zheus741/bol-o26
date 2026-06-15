@@ -1,6 +1,7 @@
 import { GROUPS, NAMES, flagUrl } from '@/lib/tournament/data'
 import { standings } from '@/lib/tournament/standings'
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server'
+import { maybeSelfHeal } from '@/lib/tournament/server-sync'
 import { LiveCarousel } from '@/components/LiveCarousel'
 import { Bracket } from '@/components/Bracket'
 import type { LiveMatch } from '@/lib/supabase/use-live-matches'
@@ -19,7 +20,9 @@ async function loadMatches(): Promise<LiveMatch[]> {
 }
 
 export default async function Home() {
-  const matches = await loadMatches()
+  let matches = await loadMatches()
+  // auto-cura: se há jogo que já começou mas segue sem resultado, sincroniza na hora
+  if (await maybeSelfHeal(matches)) matches = await loadMatches()
   const configured = isSupabaseConfigured()
 
   return (
