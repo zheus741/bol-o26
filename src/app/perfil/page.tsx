@@ -3,8 +3,19 @@ import { NAMES } from '@/lib/tournament/data'
 
 export const dynamic = 'force-dynamic'
 
-const pts = (ph: number, pa: number, rh: number, ra: number) =>
-  ph === rh && pa === ra ? 3 : Math.sign(ph - pa) === Math.sign(rh - ra) ? 1 : 0
+function pts(p: P, m: M): number {
+  const ph = p.palpite_home, pa = p.palpite_away, rh = m.home_score!, ra = m.away_score!
+  if (m.fase === 'grupos') return ph === rh && pa === ra ? 3 : Math.sign(ph - pa) === Math.sign(rh - ra) ? 1 : 0
+  const predAdv = ph > pa ? m.home_code : pa > ph ? m.away_code : p.penalti_winner
+  if (!predAdv) return 0
+  const exact = ph === rh && pa === ra
+  const advOk = predAdv === m.advances
+  if (exact && advOk) return 3
+  if (exact) return 0
+  return advOk ? 1 : 0
+}
+type M = { fase: string; home_code: string; away_code: string; home_score: number | null; away_score: number | null; status: string; grupo: string | null; advances: string | null }
+type P = { match_id: number; palpite_home: number; palpite_away: number; penalti_winner: string | null; matches: M | M[] }
 
 export default async function Perfil() {
   if (!isSupabaseConfigured()) {
@@ -23,15 +34,13 @@ export default async function Perfil() {
 
   const { data: preds } = await sb
     .from('predictions')
-    .select('match_id,palpite_home,palpite_away,matches(home_code,away_code,home_score,away_score,status,kickoff,grupo)')
+    .select('match_id,palpite_home,palpite_away,penalti_winner,matches(fase,home_code,away_code,home_score,away_score,status,kickoff,grupo,advances)')
     .eq('user_id', user.id)
     .order('match_id', { ascending: true })
 
   const nome = profile?.nome || user.email?.split('@')[0] || 'Jogador'
   const ini = nome.slice(0, 1).toUpperCase()
 
-  type M = { home_code: string; away_code: string; home_score: number | null; away_score: number | null; status: string; grupo: string | null }
-  type P = { match_id: number; palpite_home: number; palpite_away: number; matches: M | M[] }
   const hist = ((preds ?? []) as unknown as P[]).map((p) => ({ p, m: (Array.isArray(p.matches) ? p.matches[0] : p.matches) as M }))
 
   return (
@@ -61,7 +70,7 @@ export default async function Perfil() {
         <div className="hist">
           {hist.map(({ p, m }) => {
             const done = m.status === 'encerrado' && m.home_score != null
-            const pt = done ? pts(p.palpite_home, p.palpite_away, m.home_score!, m.away_score!) : null
+            const pt = done ? pts(p, m) : null
             return (
               <div className="hrow" key={p.match_id}>
                 <div className="hg">{NAMES[m.home_code]} × {NAMES[m.away_code]}<small>{m.grupo ? `Grupo ${m.grupo}` : 'Mata-mata'}</small></div>

@@ -312,3 +312,12 @@ main p,.login-label,.login-input,.login-msg,.setup,.lrow .who-cr,.psub{font-fami
 .pw-wrap .login-input{margin-bottom:0;padding-right:74px}
 .pw-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--blue);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;font-family:system-ui,Arial,sans-serif;padding:6px}
 .login-card form .pw-wrap{margin-bottom:12px}
+.bk-sc{margin-left:auto;font-family:'FWC2026X','Arial Narrow',sans-serif;font-size:17px;color:var(--ink);font-variant-numeric:tabular-nums}
+/* seletor de pênaltis (mata-mata + empate) */
+.pal-mid{display:flex;flex-direction:column;gap:8px;min-width:0}
+.pal-pen{display:flex;flex-direction:column;gap:6px;align-items:center}
+.pal-pen-q{font-size:12px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.03em;font-family:system-ui,Arial,sans-serif}
+.pal-pen-opts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.pen-opt{display:inline-flex;align-items:center;gap:7px;background:#fff;border:2px solid var(--line);border-radius:999px;padding:6px 13px 6px 8px;font-weight:700;font-size:14px;cursor:pointer;color:var(--ink);font-family:system-ui,Arial,sans-serif}
+.pen-opt img{width:22px;height:15px;border-radius:3px;object-fit:cover}
+.pen-opt.on{border-color:var(--blue);background:rgba(48,79,255,.08);box-shadow:0 0 0 2px rgba(48,79,255,.12)}

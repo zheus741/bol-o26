@@ -46,15 +46,31 @@ for (const m of data.matches) {
     const id = groupIdx[g + ':' + pairKey(h, a)]
     if (!id) { console.warn('id grupo não achado:', g, h, a); continue }
     rows.push({ id, fase: 'grupos', grupo: g, home_slot: h, away_slot: a, home_code: h, away_code: a,
-      kickoff, venue: m.ground || null, home_score: ft ? ft[0] : null, away_score: ft ? ft[1] : null, status: ft ? 'encerrado' : 'agendado' })
+      kickoff, venue: m.ground || null, home_score: ft ? ft[0] : null, away_score: ft ? ft[1] : null, status: ft ? 'encerrado' : 'agendado', advances: null })
     if (ft) jogados++
-  } else {
-    const s1 = norm(m.team1), s2 = norm(m.team2)
-    const hit = koIdx[pairKey(s1, s2)]
-    if (!hit) { console.warn('KO não mapeado:', m.team1, m.team2); continue }
-    rows.push({ id: hit.id, fase: hit.fase, grupo: null, home_slot: s1, away_slot: s2, home_code: null, away_code: null,
-      kickoff, venue: m.ground || null, home_score: ft ? ft[0] : null, away_score: ft ? ft[1] : null, status: ft ? 'encerrado' : 'agendado' })
+  } else if (m.num) {
+    const FASE = {'Round of 32':'r32','Round of 16':'r16','Quarter-final':'qf','Semi-final':'sf','Match for third place':'terceiro','Final':'final'}
+    const fase = FASE[m.round]; if (!fase) { console.warn('round KO desconhecido:', m.round); continue }
+    const hc = NAME2CODE[m.team1] || null, ac = NAME2CODE[m.team2] || null
+    const pen = m.score?.p
+    let advances = null
+    if (ft) advances = ft[0] > ft[1] ? hc : ft[1] > ft[0] ? ac : (pen ? (pen[0] > pen[1] ? hc : ac) : null)
+    rows.push({ id: m.num, fase, grupo: null, home_slot: hc || norm(m.team1), away_slot: ac || norm(m.team2), home_code: hc, away_code: ac,
+      kickoff, venue: m.ground || null, home_score: ft ? ft[0] : null, away_score: ft ? ft[1] : null, status: ft ? 'encerrado' : 'agendado', advances })
     if (ft) jogados++
+  }
+}
+// empate de KO sem pênalti: deriva quem avançou pelo round seguinte
+{
+  const byId = new Map(rows.map((r) => [r.id, r]))
+  const wref = {}
+  for (const fase of Object.keys(BR)) for (const [id, [a, b]] of Object.entries(BR[fase])) {
+    if (a.startsWith('W')) wref[a] = { id: +id, side: 'home_code' }
+    if (b.startsWith('W')) wref[b] = { id: +id, side: 'away_code' }
+  }
+  for (const r of rows) if (r.fase !== 'grupos' && r.status === 'encerrado' && !r.advances) {
+    const ref = wref['W' + r.id]; const f = ref ? byId.get(ref.id) : null
+    if (f) r.advances = f[ref.side]
   }
 }
 rows.sort((a, b) => a.id - b.id)

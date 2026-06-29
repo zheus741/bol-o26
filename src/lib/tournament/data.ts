@@ -108,11 +108,10 @@ const KO_FASE: Record<string, keyof typeof BRACKET> = {
 
 // constrói as 104 linhas de matches a partir do JSON do openfootball
 export function buildMatchRowsFromOpenfootball(of: { matches: OFMatch[] }) {
+  // grupos: id pela ordem RR (preserva os palpites já feitos). KO: id = m.num oficial (73-104).
   const groupId: Record<string, number> = {}
   let n = 1
   for (const g of Object.keys(GROUPS)) for (const [i, j] of RR) groupId[g + ':' + [GROUPS[g][i], GROUPS[g][j]].sort().join('|')] = n++
-  const koId: Record<string, { id: number; fase: string }> = {}
-  for (const fase of Object.keys(BRACKET)) for (const [id, [a, b]] of Object.entries(BRACKET[fase])) koId[[a, b].sort().join('|')] = { id: +id, fase }
 
   const norm = (s: string) => (s.includes('/') ? '3' + s.slice(1).replace(/\//g, '') : s)
   const toUTC = (date: string, time: string) => {
@@ -129,13 +128,33 @@ export function buildMatchRowsFromOpenfootball(of: { matches: OFMatch[] }) {
       const h = NAME2CODE[m.team1], a = NAME2CODE[m.team2]
       const id = g && h && a ? groupId[g + ':' + [h, a].sort().join('|')] : undefined
       if (!id) continue
-      rows.push({ id, fase: 'grupos', grupo: g, home_slot: h, away_slot: a, home_code: h, away_code: a, kickoff, venue: m.ground || null, home_score: ft ? ft[0] : null, away_score: ft ? ft[1] : null, status })
-    } else if (KO_FASE[m.round]) {
-      const s1 = norm(m.team1), s2 = norm(m.team2), hit = koId[[s1, s2].sort().join('|')]
-      if (!hit) continue
-      rows.push({ id: hit.id, fase: hit.fase, grupo: null, home_slot: s1, away_slot: s2, home_code: null, away_code: null, kickoff, venue: m.ground || null, home_score: ft ? ft[0] : null, away_score: ft ? ft[1] : null, status })
+      rows.push({ id, fase: 'grupos', grupo: g, home_slot: h, away_slot: a, home_code: h, away_code: a, kickoff, venue: m.ground || null, home_score: ft ? ft[0] : null, away_score: ft ? ft[1] : null, status, advances: null as string | null })
+    } else if (KO_FASE[m.round] && m.num) {
+      // KO: usa o número oficial; time real quando já resolvido, senão o slot (W74, 3CEFHI…)
+      const hc = NAME2CODE[m.team1] ?? null, ac = NAME2CODE[m.team2] ?? null
+      const pen = m.score?.p // placar de pênaltis [casa,fora] se houver
+      let advances: string | null = null
+      if (ft) advances = ft[0] > ft[1] ? hc : ft[1] > ft[0] ? ac : pen ? (pen[0] > pen[1] ? hc : ac) : null
+      rows.push({ id: m.num, fase: KO_FASE[m.round], grupo: null,
+        home_slot: hc ?? norm(m.team1), away_slot: ac ?? norm(m.team2),
+        home_code: hc, away_code: ac, kickoff, venue: m.ground || null,
+        home_score: ft ? ft[0] : null, away_score: ft ? ft[1] : null, status, advances })
+    }
+  }
+  // empate de KO sem pênalti no openfootball: deriva quem avançou pelo round seguinte (W{num})
+  const byId = new Map(rows.map((r) => [r.id, r]))
+  const wref: Record<string, { id: number; side: 'home' | 'away' }> = {}
+  for (const fase of Object.keys(BRACKET)) for (const [id, [a, b]] of Object.entries(BRACKET[fase])) {
+    if (a.startsWith('W')) wref[a] = { id: +id, side: 'home' }
+    if (b.startsWith('W')) wref[b] = { id: +id, side: 'away' }
+  }
+  for (const r of rows) {
+    if (r.fase !== 'grupos' && r.status === 'encerrado' && !r.advances) {
+      const ref = wref['W' + r.id]
+      const feeder = ref ? byId.get(ref.id) : undefined
+      if (feeder) r.advances = ref!.side === 'home' ? feeder.home_code : feeder.away_code
     }
   }
   return rows.sort((a, b) => a.id - b.id)
 }
-type OFMatch = { round: string; date: string; time: string; team1: string; team2: string; group?: string; ground?: string; score?: { ft?: [number, number] } }
+type OFMatch = { round: string; num?: number; date: string; time: string; team1: string; team2: string; group?: string; ground?: string; score?: { ft?: [number, number]; p?: [number, number] } }

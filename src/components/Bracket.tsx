@@ -15,8 +15,17 @@ export function Bracket({ matches }: { matches: BracketMatch[] }) {
   const byId = new Map(matches.map((m) => [m.id, m]))
   const thirds = solveThirds(matches)
 
-  function Slot({ slot }: { slot: string }) {
-    const code = /^[123]/.test(slot) ? resolveSlot(slot, matches, thirds) : null
+  // time resolvido do lado: code real (openfootball) > slot de grupo (1A/3X via classificação) > pendente
+  function resolveSide(m: BracketMatch | undefined, side: 'home' | 'away'): string | null {
+    if (!m) return null
+    const code = side === 'home' ? m.home_code : m.away_code
+    if (code) return code
+    const slot = (side === 'home' ? m.home_slot : m.away_slot) ?? ''
+    return /^[123]/.test(slot) ? resolveSlot(slot, matches, thirds) : null
+  }
+  function Slot({ m, side, score, done }: { m: BracketMatch | undefined; side: 'home' | 'away'; score: number | null | undefined; done: boolean }) {
+    const code = resolveSide(m, side)
+    const slot = (side === 'home' ? m?.home_slot : m?.away_slot) ?? '?'
     const f = flagUrl(code)
     return (
       <div className="bk-slot">
@@ -25,15 +34,18 @@ export function Bracket({ matches }: { matches: BracketMatch[] }) {
           ? <img className="bk-flag" src={f} alt="" loading="lazy" decoding="async" />
           : <span className="bk-flag ph" />}
         {code ? <b>{code}</b> : <i>{slot}</i>}
+        {done && <span className="bk-sc">{score}</span>}
       </div>
     )
   }
   function Cell({ id }: { id: number }) {
     const m = byId.get(id)
+    const done = !!m && m.status === 'encerrado' && m.home_score != null
     return (
       <div className="bk-cell">
-        <div className="bk-meta"><span>J{id}</span><span>{brt(m?.kickoff)}</span></div>
-        <Slot slot={m?.home_slot ?? '?'} /><Slot slot={m?.away_slot ?? '?'} />
+        <div className="bk-meta"><span>J{id}</span><span>{done ? 'FIM' : brt(m?.kickoff)}</span></div>
+        <Slot m={m} side="home" score={m?.home_score} done={done} />
+        <Slot m={m} side="away" score={m?.away_score} done={done} />
       </div>
     )
   }
