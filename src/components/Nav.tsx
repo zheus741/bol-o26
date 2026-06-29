@@ -3,7 +3,8 @@
 import { usePathname } from 'next/navigation'
 
 const LINKS = [
-  { href: '/', label: 'Torneio', icon: 'M3 11l9-8 9 8M5 9v11h5v-6h4v6h5V9' },
+  { href: '/', label: 'Mata-mata', icon: 'M6 4v6h6M6 20v-6h6M12 7h6M12 17h6' },
+  { href: '/grupos', label: 'Grupos', icon: 'M4 5h16v14H4zM4 10h16M10 10v9' },
   { href: '/palpites', label: 'Palpites', icon: 'M4 6h16M4 12h16M4 18h10' },
   { href: '/ranking', label: 'Ranking', icon: 'M6 20V10M12 20V4M18 20v-7' },
   { href: '/perfil', label: 'Perfil', icon: 'M12 12a4 4 0 100-8 4 4 0 000 8ZM4 21c0-4 4-6 8-6s8 2 8 6' },

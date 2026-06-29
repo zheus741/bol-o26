@@ -61,6 +61,8 @@ export function Bracket({ matches }: { matches: BracketMatch[] }) {
       <div className="bk2">
         <div className="bk-side">{COLS_L.map(([l, ids]) => <Round key={'l' + l} label={l} ids={ids} />)}</div>
         <div className="bk-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="bk-trofeu" src="/assets/trofeu.svg" alt="" />
           <div className="bk-round"><div className="bk-h">Final</div><div className="bk-cells"><Cell id={104} /></div></div>
           <div className="bk-round bk-third"><div className="bk-h">3º lugar</div><div className="bk-cells"><Cell id={103} /></div></div>
         </div>
