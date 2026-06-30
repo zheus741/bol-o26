@@ -9,7 +9,7 @@ const COLS_R: [string, number[]][] = [['Semi', RIGHT.sf], ['Quartas', RIGHT.qf],
 
 const brt = (iso: string | null | undefined) => iso ? new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(iso)) : ''
 
-type BracketMatch = MatchLite & { home_slot?: string; away_slot?: string; kickoff?: string | null }
+type BracketMatch = MatchLite & { home_slot?: string; away_slot?: string; kickoff?: string | null; advances?: string | null }
 
 export function Bracket({ matches }: { matches: BracketMatch[] }) {
   const byId = new Map(matches.map((m) => [m.id, m]))
