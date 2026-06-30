@@ -15,13 +15,18 @@ export function Bracket({ matches }: { matches: BracketMatch[] }) {
   const byId = new Map(matches.map((m) => [m.id, m]))
   const thirds = solveThirds(matches)
 
-  // time resolvido do lado: code real (openfootball) > slot de grupo (1A/3X via classificação) > pendente
+  // time resolvido do lado: code real (openfootball) > slot de grupo (1A/3X) > vencedor/perdedor de jogo anterior (W##/L##)
   function resolveSide(m: BracketMatch | undefined, side: 'home' | 'away'): string | null {
     if (!m) return null
     const code = side === 'home' ? m.home_code : m.away_code
     if (code) return code
     const slot = (side === 'home' ? m.home_slot : m.away_slot) ?? ''
-    return /^[123]/.test(slot) ? resolveSlot(slot, matches, thirds) : null
+    if (/^[123]/.test(slot)) return resolveSlot(slot, matches, thirds)
+    const w = slot.match(/^W(\d+)$/) // vencedor que avançou do jogo N
+    if (w) return byId.get(+w[1])?.advances ?? null
+    const l = slot.match(/^L(\d+)$/) // perdedor do jogo N (disputa de 3º)
+    if (l) { const f = byId.get(+l[1]); if (f?.advances) return f.home_code === f.advances ? (f.away_code ?? null) : (f.home_code ?? null) }
+    return null
   }
   function Slot({ m, side, score, done }: { m: BracketMatch | undefined; side: 'home' | 'away'; score: number | null | undefined; done: boolean }) {
     const code = resolveSide(m, side)
